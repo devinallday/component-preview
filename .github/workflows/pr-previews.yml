@@ -1,0 +1,126 @@
+name: PR Previews
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed component files
+        id: changed
+        run: |
+          # Changed .tsx/.jsx files under src/components/ (excluding the *.preview.tsx themselves)
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            | grep -E 'src/components/.*\.(tsx|jsx)$' \
+            | grep -v '\.preview\.' || true)
+          echo "components<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Setup Node
+        if: steps.changed.outputs.components != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: steps.changed.outputs.components != ''
+        run: cd vite-app && npm ci
+
+      - name: Build changed component previews
+        if: steps.changed.outputs.components != ''
+        id: build
+        run: |
+          cd vite-app
+          mkdir -p .component-preview/dist
+          # Manifest maps "ComponentName|safe_name" for the PR comment step.
+          : > .component-preview/manifest.txt
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            # vite-app-relative path (drop the leading "vite-app/")
+            rel="${file#vite-app/}"
+            preview_path="${rel%.*}.preview.tsx"
+            if [ -f "$preview_path" ]; then
+              echo "Building preview for $rel..."
+              safe_name=$(echo "$preview_path" | sed 's|/|_|g' | sed 's|\.preview\.tsx||')
+              node build-cli.js --entry "$preview_path" --out ".component-preview/dist/$safe_name"
+              component_name=$(basename "$file" | sed 's/\.[^.]*$//')
+              echo "$component_name|$safe_name" >> .component-preview/manifest.txt
+            else
+              echo "No preview file for $rel (expected $preview_path) — skipping."
+            fi
+          done <<< "${{ steps.changed.outputs.components }}"
+
+          if [ -s .component-preview/manifest.txt ] && [ -n "$(ls -A .component-preview/dist)" ]; then
+            echo "built=true" >> $GITHUB_OUTPUT
+          else
+            echo "built=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.build.outputs.built == 'true'
+        id: deploy
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: component-preview
+          directory: vite-app/.component-preview/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment PR with preview URLs
+        if: steps.build.outputs.built == 'true'
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const fs = require('fs');
+            const base = process.env.DEPLOY_URL.replace(/\/$/, '');
+            const manifest = fs.readFileSync(
+              'vite-app/.component-preview/manifest.txt', 'utf8'
+            ).trim().split('\n').filter(Boolean);
+
+            const lines = manifest.map((row) => {
+              const [name, safe] = row.split('|');
+              return `- [${name}](${base}/${safe}/)`;
+            });
+
+            const marker = '<!-- component-preview-bot -->';
+            const body = `${marker}\n## 🚀 Component Previews\n\n` +
+              `Previews for components changed in this PR:\n\n${lines.join('\n')}\n\n` +
+              `<sub>Deployed from ${context.sha.slice(0, 7)}</sub>`;
+
+            // Upsert: replace our previous comment if present, else create.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
