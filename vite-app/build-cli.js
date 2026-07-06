@@ -45,11 +45,14 @@ const mainContent = `import React from 'react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from '${absoluteEntryPath}'
+import PreviewToolbar from '${resolve(process.cwd(), "src/preview/PreviewToolbar.tsx")}'
 ${rootCssPath ? `import '${rootCssPath}'` : "// No CSS file found"}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <PreviewToolbar>
+      <App />
+    </PreviewToolbar>
   </StrictMode>,
 )`;
 
