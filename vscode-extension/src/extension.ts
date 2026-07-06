@@ -5,6 +5,7 @@ import { generateMock, writeMockFile, pinPreview } from "./preview";
 import { startDevServer, getPreviewUrl, stopServer } from "./server";
 import { showPreview } from "./webview";
 import { PreviewCodeLensProvider } from "./codelens";
+import { PreviewCache } from "./cache";
 
 const API_KEY_SECRET = "previewAgent.anthropicApiKey";
 
@@ -61,17 +62,33 @@ export function activate(context: vscode.ExtensionContext) {
               throw new Error("No workspace folder open");
             }
 
-            progress.report({ message: "Generating mock..." });
-            const apiKey = await context.secrets.get(API_KEY_SECRET);
-            if (!apiKey) {
-              throw new Error(
-                "API key not set. Run 'Preview: Set API Key' command.",
-              );
-            }
+            const cache = new PreviewCache(workspaceRoot);
+            const hash = cache.computeHash(componentContext);
+            const cached = cache.get(hash);
 
-            const mockCode = await generateMock(componentContext, apiKey);
-            if (!mockCode) {
-              throw new Error("Failed to generate mock");
+            let mockCode: string;
+
+            if (cached) {
+              progress.report({ message: "Using cached mock..." });
+              mockCode = cached.mockCode;
+            } else {
+              progress.report({ message: "Generating mock..." });
+              const apiKey = await context.secrets.get(API_KEY_SECRET);
+              if (!apiKey) {
+                throw new Error(
+                  "API key not set. Run 'Preview: Set API Key' command.",
+                );
+              }
+
+              const generated = await generateMock(componentContext, apiKey);
+              if (!generated) {
+                throw new Error("Failed to generate mock");
+              }
+
+              mockCode = generated;
+
+              // Cache the generated mock
+              cache.set(hash, { mockCode, timestamp: Date.now() });
             }
 
             progress.report({ message: "Writing mock file..." });

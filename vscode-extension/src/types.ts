@@ -93,3 +93,14 @@ export interface PreviewMetadata {
   /** Required providers detected. */
   requiredProviders: string[];
 }
+
+/**
+ * A cached mock entry for the preview generation cache.
+ * Stored in `.component-preview/cache.json` keyed by content hash.
+ */
+export interface CacheEntry {
+  /** The generated mock code. */
+  mockCode: string;
+  /** When this entry was created (for TTL and LRU). */
+  timestamp: number;
+}

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Component Preview — Vision & Roadmap</title>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --panel: #121821;
+        --panel-2: #161d28;
+        --line: #232c3a;
+        --text: #e6edf3;
+        --muted: #9aa7b6;
+        --accent: #1db954; /* spotify green */
+        --accent-2: #4ea1ff;
+        --warn: #f0b429;
+        --radius: 14px;
+        --maxw: 940px;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { margin: 0; padding: 0; }
+
+      body {
+        background:
+          radial-gradient(1200px 600px at 80% -10%, rgba(29, 185, 84, 0.10), transparent 60%),
+          radial-gradient(900px 500px at -10% 10%, rgba(78, 161, 255, 0.10), transparent 55%),
+          var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, "Apple Color Emoji", sans-serif;
+        line-height: 1.55;
+      }
+
+      .wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 64px 24px 96px;
+      }
+
+      /* ---- Hero ---- */
+      .eyebrow {
+        display: inline-block;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 1.05;
+        margin: 0 0 20px;
+        letter-spacing: -0.02em;
+      }
+
+      .lede {
+        font-size: clamp(17px, 2.2vw, 20px);
+        color: var(--muted);
+        max-width: 720px;
+        margin: 0 0 8px;
+      }
+
+      .lede strong { color: var(--text); font-weight: 600; }
+
+      /* ---- Sections ---- */
+      section { margin-top: 72px; }
+
+      .sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 8px;
+      }
+
+      .sec-num {
+        font-variant-numeric: tabular-nums;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--bg);
+        background: var(--accent);
+        border-radius: 999px;
+        padding: 2px 10px;
+        letter-spacing: 0.04em;
+      }
+
+      h2 {
+        font-size: clamp(22px, 3vw, 30px);
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      .sec-sub {
+        color: var(--muted);
+        margin: 6px 0 28px;
+        max-width: 720px;
+      }
+
+      /* ---- Cards ---- */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        opacity: 0.85;
+      }
+
+      .card .step {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent-2);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .card h3 {
+        font-size: 17px;
+        margin: 10px 0 8px;
+        letter-spacing: -0.01em;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+
+      .card ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+
+      .card li {
+        margin-bottom: 4px;
+      }
+
+      .card li:last-child {
+        margin-bottom: 0;
+      }
+
+      .card .tag {
+        display: inline-block;
+        margin-top: 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        background: rgba(29, 185, 84, 0.12);
+        border: 1px solid rgba(29, 185, 84, 0.35);
+        border-radius: 999px;
+        padding: 2px 9px;
+      }
+
+      .card .tag.wip {
+        color: var(--warn);
+        background: rgba(240, 180, 41, 0.12);
+        border-color: rgba(240, 180, 41, 0.35);
+      }
+
+      .card .tag.next {
+        color: var(--accent-2);
+        background: rgba(78, 161, 255, 0.12);
+        border-color: rgba(78, 161, 255, 0.35);
+      }
+
+      /* ---- Bottleneck callout ---- */
+      .callout {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+
+      .callout .stage {
+        text-align: center;
+        padding: 10px 8px;
+      }
+
+      .callout .stage .k {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .callout .stage .v {
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .callout .stage.bottleneck .v { color: var(--warn); }
+      .callout .arrow { color: var(--muted); font-size: 20px; text-align: center; }
+
+      @media (max-width: 680px) {
+        .callout { grid-template-columns: 1fr; }
+        .callout .arrow { transform: rotate(90deg); }
+      }
+
+      /* ---- Footer ---- */
+      footer {
+        margin-top: 80px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 1px 6px;
+      }
+
+      /* ---- Mermaid diagrams ---- */
+      .mermaid {
+        margin: 24px 0;
+        font-size: 13px;
+      }
+      .mermaid svg {
+        max-height: 240px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- HERO -->
+      <span class="eyebrow">Component Preview</span>
+      <h1>Verification is the next bottleneck.</h1>
+      <p class="lede">
+        AI accelerates <strong>writing</strong>. The bottleneck is now <strong>trusting</strong> code.
+        Solution: in-IDE preview that validates components as you build — and shares that validation with the team.
+      </p>
+
+      <div class="callout" aria-label="Where the bottleneck moved">
+        <div class="stage"><div class="k">Ideation</div><div class="v">AI-assisted</div></div>
+        <div class="arrow">→</div>
+        <div class="stage"><div class="k">Authoring</div><div class="v">AI-assisted</div></div>
+        <div class="arrow">→</div>
+        <div class="stage bottleneck"><div class="k">Verification</div><div class="v">⚠ the bottleneck</div></div>
+      </div>
+
+      <!-- SECTION 1: THE IDEA -->
+      <section>
+        <div class="sec-head">
+          <span class="sec-num">01</span>
+          <h2>The idea</h2>
+        </div>
+        <p class="sec-sub">
+          Instant, isolated component view — turned into a trustworthy team signal.
+        </p>
+
+        <div class="mermaid">
+flowchart LR
+  A[Component file] --> B[Generate mock]
+  B --> C[Render in IDE]
+  C --> D[Cache &amp; display]
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="step">Premise</div>
+            <h3>Shipping outpaces trust</h3>
+            <ul>
+              <li>Teams generate more UI than they can eyeball</li>
+              <li>Verification becomes the rate-limiter</li>
+              <li>"Does this actually render and behave?"</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="step">Build</div>
+            <h3>Validate in the IDE</h3>
+            <ul>
+              <li>Clean, in-editor experience</li>
+              <li>Render component in isolation</li>
+              <li>Real props, real providers, real DOM</li>
+            </ul>
+            <span class="tag">Shipped</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: CORE IMPROVEMENTS -->
+      <section>
+        <div class="sec-head">
+          <span class="sec-num">02</span>
+          <h2>Core improvements</h2>
+        </div>
+        <p class="sec-sub">
+          Solid, fast, honest loop.
+        </p>
+
+        <div class="mermaid">
+flowchart LR
+  A[Component file] --> B[Generate mock]
+  B --> C[Render in IDE]
+  C --> D[Theme toggle]
+  D --> E[Scroll stage]
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="step">Fidelity</div>
+            <h3>Theme provider bridge</h3>
+            <ul>
+              <li>Document-level theme bridge in dev-server</li>
+              <li>React state bridge via ThemeProvider</li>
+              <li>Light/dark toggle drives component</li>
+            </ul>
+            <span class="tag">Shipped</span>
+          </div>
+          <div class="card">
+            <div class="step">UX</div>
+            <h3>Viewport &amp; scroll controls</h3>
+            <ul>
+              <li>Toolbar with responsive/fixed viewports</li>
+              <li>Zoom-to-fit, backdrop options</li>
+              <li>Scrollable stage for tall galleries</li>
+            </ul>
+            <span class="tag">Shipped</span>
+          </div>
+          <div class="card">
+            <div class="step">Scrolling</div>
+            <h3>Root overflow scroll</h3>
+            <ul>
+              <li>overflow: auto on #root in iframe</li>
+              <li>Content overflow now scrolls</li>
+            </ul>
+            <span class="tag">Shipped</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: ACCESSIBLE -->
+      <section>
+        <div class="sec-head">
+          <span class="sec-num">03</span>
+          <h2>Making the work accessible</h2>
+        </div>
+        <p class="sec-sub">
+          Local preview is useful. Shared, reviewable preview is a workflow.
+        </p>
+
+        <div class="cards">
+          <div class="card">
+            <div class="step">Host</div>
+            <h3>Leverage Cloudflare</h3>
+            <ul>
+              <li>Publish previews to Cloudflare (R2 + Workers)</li>
+              <li>Any teammate opens a URL</li>
+              <li>No local dev server, no checkout</li>
+            </ul>
+            <span class="tag next">Next</span>
+          </div>
+          <div class="card">
+            <div class="step">Precision</div>
+            <h3>Generate via diffs</h3>
+            <ul>
+              <li>Regenerate only what changed</li>
+              <li>Drive model with diffs, not whole-file rewrites</li>
+            </ul>
+            <span class="tag next">Next</span>
+          </div>
+          <div class="card">
+            <div class="step">Workflow</div>
+            <h3>Share via PR</h3>
+            <ul>
+              <li>Commit previews as durable artifacts</li>
+              <li>Post hosted link on PR</li>
+            </ul>
+            <span class="tag next">Next</span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>Component Preview — vision &amp; roadmap</span>
+        <span>Verification is the moat.</span>
+      </footer>
+    </div>
+  </body>
+</html>

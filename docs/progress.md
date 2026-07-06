@@ -236,3 +236,31 @@ Ran two fast subagents in parallel (disjoint files) under orchestrator review:
 - **Scrolling fixed**: Changed `.stage` `justify-content: center` → `flex-start` in `styles.css` to prevent overflow clipping
 - Extension compiled clean (`npm run compile`)
 - Temp files cleaned: removed `theme-verify.mjs`
+
+## 2026-07-06 15:40 PDT — PR #3: AlbumCard preview with more variants (6 albums × 2 themes)
+
+- Updated `AlbumCard.preview.tsx` to generate more content per the prompt's instruction:
+  - Expanded from 1 album to 6 distinct albums (Daft Punk, Pink Floyd, Beatles, Michael Jackson, Miles Davis, Fleetwood Mac).
+  - Changed layout to 3-column grid with 2 cards per theme (12 total cards: 6 dark + 6 light).
+  - This matches the prompt's guidance: "Make the mock content large enough to require scrolling" and "render multiple variants."
+- Also added the optional `theme` prop to `AlbumCard.tsx` (same as PR #2) so the preview can render both light and dark variants.
+- Local build verified: `node build-cli.js --entry src/components/Album/AlbumCard.preview.tsx` succeeded.
+- Opened PR #3; initial workflow run failed due to `gitHubToken` (same blocker as PR #1).
+- Fixed workflow on branch: removed `gitHubToken` from Cloudflare action; re-run succeeded.
+- Preview deployed and commented: https://102bd5cf.component-preview.pages.dev/src_components_Album_AlbumCard/
+- **Note:** the fix is on the branch; `main` still has the old workflow, so new branches from `main` will hit the same failure until merged.
+
+## 2026-07-06 15:50 PDT — PR #4: Static toolbar for deployed previews
+
+- Added a lightweight toolbar to static preview builds (deployed previews) so reviewers can toggle theme and viewport size without editing URLs.
+- New `PreviewToolbar.tsx` component with:
+  - Theme toggle (light/dark) with emoji indicators
+  - Viewport size presets (Mobile 375px, Tablet 768px, Desktop 100%)
+  - Visual cues when viewport is constrained: border, border-radius, and shadow on mobile/tablet modes (none on desktop)
+  - Responsive styling that adapts to current theme
+- Updated `build-cli.js` to wrap the component in `PreviewToolbar`
+- Updated workflow to trigger on `src/preview/` changes (not just `src/components/`) so toolbar improvements get deployed
+- Added AlbumCard.preview.tsx with 6 albums × 2 themes to this PR to demonstrate the toolbar in the deployed preview
+- Local build verified: toolbar renders and controls work
+- Preview deployed and commented: https://a9a04ca9.component-preview.pages.dev/src_components_Album_AlbumCard/
+- **Note:** the workflow fix (removed gitHubToken) is on this branch; `main` still has the old workflow.
