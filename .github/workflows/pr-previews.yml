@@ -77,7 +77,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: component-preview
           directory: vite-app/.component-preview/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR with preview URLs
         if: steps.build.outputs.built == 'true'
