@@ -8,6 +8,8 @@ interface AlbumCardProps {
   onTrackPlay: (track: Track) => void;
   /** Color scheme to render in. Defaults to "dark" (the app's default surface). */
   theme?: "light" | "dark";
+  /** Whether to show a "Featured" badge on the card. */
+  featured?: boolean;
 }
 
 // Per-theme class sets. Keeping them in one place makes it easy to see the
@@ -32,6 +34,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   onAlbumSelect,
   onTrackPlay,
   theme = "dark",
+  featured = false,
 }) => {
   const styles = THEME_STYLES[theme];
   const handlePlayClick = (e: React.MouseEvent) => {
@@ -43,9 +46,20 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
 
   return (
     <div
-      className={`group cursor-pointer p-8 ${styles.container} rounded-lg transition-all duration-200`}
+      className={`group cursor-pointer p-8 ${styles.container} rounded-lg transition-all duration-200 relative`}
       onClick={() => onAlbumSelect(album)}
     >
+      {featured && (
+        <div
+          className={`absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded ${
+            theme === "dark"
+              ? "bg-spotify-green text-black"
+              : "bg-green-600 text-white"
+          }`}
+        >
+          Featured
+        </div>
+      )}
       <div className="relative mb-4">
         <img
           src={album.imageUrl}
