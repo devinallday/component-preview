@@ -48,6 +48,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
         </h3>
         <p className="text-spotify-gray-300 text-sm truncate">{album.artist}</p>
         <p className="text-spotify-gray-400 text-xs">{album.year}</p>
+        <p className="text-spotify-gray-500 text-xs">{album.tracks.length} tracks</p>
       </div>
     </div>
   );

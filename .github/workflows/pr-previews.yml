@@ -77,7 +77,8 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: component-preview
           directory: vite-app/.component-preview/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          # gitHubToken intentionally omitted: we post our own PR comment below,
+          # and creating a GitHub Deployment would require `deployments: write`.
 
       - name: Comment PR with preview URLs
         if: steps.build.outputs.built == 'true'
