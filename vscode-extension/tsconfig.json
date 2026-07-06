@@ -13,5 +13,9 @@
 		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
-	}
+	},
+	/* Extension host code only. The React webview UI (webview-ui/) is built
+	   separately by Vite (browser target, JSX) — keep it out of the host tsc build. */
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "out", "webview-ui", "vite.webview.config.ts"]
 }

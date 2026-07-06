@@ -23,13 +23,19 @@
       {
         "command": "component-preview.setApiKey",
         "title": "Preview: Set API Key"
+      },
+      {
+        "command": "component-preview.pin",
+        "title": "Preview: Pin Preview"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && npm run build:webview",
+    "build:webview": "vite build --config vite.webview.config.ts",
     "watch": "tsc -watch -p ./",
+    "watch:webview": "vite build --watch --config vite.webview.config.ts",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
@@ -37,14 +43,20 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
     "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "@vitejs/plugin-react": "^4.7.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.25.1",
     "playwright": "^1.61.1",
-    "typescript": "^5.8.3"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.21"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.8",

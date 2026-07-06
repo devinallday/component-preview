@@ -55,6 +55,41 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )`;
 
+// Document-level theme bridge (ADDITIVE — see docs/decisions.md).
+// Runs inline in <head> before first paint so the previewed page's document
+// (background, colorScheme, any Tailwind `dark:`/[data-theme] styling) reflects
+// the Component Preview webview's theme signal:
+//   1. seeded from the `?previewTheme=light|dark` query param on load, and
+//   2. updated live via the `{source:"component-preview",type:"set-theme"}`
+//      postMessage the webview posts into this iframe.
+// Fully inert when neither the param nor the message is present, so normal
+// standalone usage of the dev server is unaffected. Note this is the
+// document-level layer; components reading React theme state (e.g. via
+// useThemeContext) are handled additionally by the app-side bridge in
+// src/contexts/previewThemeBridge.ts + ThemeProvider.
+const themeBridgeScript = `<script>
+      (function () {
+        function applyTheme(theme) {
+          if (theme !== "light" && theme !== "dark") return;
+          var el = document.documentElement;
+          el.setAttribute("data-theme", theme);
+          el.classList.remove("light", "dark");
+          el.classList.add(theme);
+          el.style.colorScheme = theme;
+        }
+        try {
+          var seeded = new URLSearchParams(window.location.search).get("previewTheme");
+          if (seeded) applyTheme(seeded);
+        } catch (e) {}
+        window.addEventListener("message", function (event) {
+          var data = event.data;
+          if (data && data.source === "component-preview" && data.type === "set-theme") {
+            applyTheme(data.theme);
+          }
+        });
+      })();
+    </script>`;
+
 // Generate the HTML template
 const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -62,6 +97,7 @@ const htmlContent = `<!DOCTYPE html>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dev Server - ${entryFile}</title>
+    ${themeBridgeScript}
   </head>
   <body>
     <div id="root"></div>

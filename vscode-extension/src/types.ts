@@ -72,3 +72,24 @@ export interface VerifyResult {
   renderedContent: boolean;
   assertionResults?: AssertionResult[];
 }
+
+/**
+ * Provenance metadata for a pinned preview (D12/Tier 0).
+ * Written as a sidecar JSON alongside `*.preview.tsx` to make mocks reproducible.
+ */
+export interface PreviewMetadata {
+  /** Component name this preview targets. */
+  componentName: string;
+  /** Absolute path to the component file. */
+  componentPath: string;
+  /** When this preview was pinned. */
+  pinnedAt: string;
+  /** Model used for generation. */
+  model: string;
+  /** Hash of the prompt (for reproducibility). */
+  promptHash: string;
+  /** Context files used in generation (absolute paths). */
+  contextFiles: string[];
+  /** Required providers detected. */
+  requiredProviders: string[];
+}

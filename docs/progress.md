@@ -165,3 +165,74 @@ Ran two fast subagents in parallel (disjoint files) under orchestrator review:
   + added self-correcting loop & variant fan-out; `README.md` index now lists all docs + `report/`.
 - Fixed a duplicate `(later 3)` heading collision above (renamed the research entry to a timestamp).
 - No extension code changed — docs only.
+
+## 2026-07-06 14:53 PDT — generation prompt: variant fan-out (seam #3)
+
+- Improved `preview.ts` `generateMock` prompt to render **multiple variants** instead of one.
+  New "Render multiple variants" section instructs the model to: (1) identify enumerable prop
+  axes — string-literal unions/enums, booleans, and prop-driven discrete internal states
+  (e.g. injected fetcher → loading/success/error); (2) render **one variant per enum member**
+  so all values are visible at once; (3) compose them as a **labeled gallery inside the single
+  default export** (the dev-server contract renders only the default export — called out
+  explicitly); (4) hold shared/complex props constant and pick the most meaningful axis rather
+  than a full cross-product; (5) fall back to a single instance when there are no enumerable axes.
+  Replaced the single-instance example with a labeled enum-gallery example.
+- Best demonstrators (for eval / manual check): **Tooltip** (`position` 4-value union + flagship
+  force-visible), **AsyncTrackList** (`loading|success|error` via injected `fetchTracks`),
+  **Dropdown** (`align` 3-value union); TrackItem (boolean flags) secondary. AlbumCard/Player weak.
+- Verified: `npm run compile` clean. Not yet run against a live LLM.
+- Touches generation seam only; coordinate w/ workstreams A (feedback) + D (caching) on `preview.ts`.
+
+### Next
+- Consider surfacing variant count/labels as mock metadata for the verify gate + webview gallery (B).
+
+## 2026-07-06 15:06 PDT — pin-to-commit persistence (D12/Tier 0) complete
+
+- Implemented workstream F: pin-to-commit persistence (ephemeral-by-default, explicit pin to committed artifact).
+- Added `PreviewMetadata` type to `types.ts` (provenance: componentName, componentPath, pinnedAt, model, promptHash, contextFiles, requiredProviders).
+- Added `pinPreview()` to `preview.ts`: writes `ComponentName.preview.tsx` + `ComponentName.preview.json` sidecar next to the component; computes promptHash from mockCode + context file paths.
+- Extended `webviewProtocol.ts`: added `{ type: "pin" }` message.
+- Extended `webview.ts`: added pin handler (executes `component-preview.pin` command); added `currentComponentContext` module var; updated `showPreview()` to accept/store componentContext.
+- Added `component-preview.pin` command to `extension.ts`: full flow (collectContext → generateMock → pinPreview → notification); reuses existing context + generation logic.
+- Registered command in `package.json`.
+- Claimed workstream F in `tasks.md` (in-progress → done).
+- Verified: `npm run compile` clean.
+- Next: static build path (`build-cli.js`) to export pinned previews for PR/hosting (Tier 1).
+
+## 2026-07-06 15:06 PDT — static build path complete
+
+- Created `vite-app/build-cli.js`: static build sibling to `dev-server-cli.js`. Same alias/CSS/theme-bridge logic; runs `vite build` instead of `createServer`.
+- Usage: `node build-cli.js --entry <path-to-mock.tsx> --out <dist-dir>`. Outputs self-contained static bundle (HTML + hashed JS/CSS).
+- Tested: built `.component-preview/mock.tsx` → `.component-preview/dist/` (197KB JS, 20KB CSS, 1KB HTML). Clean.
+- Claimed workstream G in `tasks.md` (done).
+- Next: integrate build into pin command OR GitHub Action workflow for PR previews (Cloudflare Pages).
+
+## 2026-07-06 15:08 PDT — local preview build script complete
+
+- Created `vite-app/build-previews.sh`: finds all `*.preview.tsx` files (excludes node_modules/.component-preview), builds each with `build-cli.js` to `.component-preview/dist/<safe_name>`.
+- Created test preview `AlbumCard.preview.tsx` to demonstrate flow.
+- Tested end-to-end: script found preview → built to `.component-preview/dist/src_components_Album_AlbumCard/` → served via `npx serve` → `http://localhost:54552`.
+- Minimal local flow: pin → `./build-previews.sh` → `npx serve .component-preview/dist` → URL.
+- Claimed workstream H in `tasks.md` (done).
+- GitHub Action `.github/workflows/deploy-previews.yml` also created (Cloudflare Pages) for future CI/PR use.
+
+## 2026-07-06 15:14 PDT — Cloudflare Pages deployment complete
+
+- Created `vite-app/.env`: stores `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+- Updated `vite-app/deploy-cloudflare.sh`: loads from `.env`, validates token, builds previews, deploys to Cloudflare Pages with `--commit-dirty=true` to silence git warning.
+- Created Cloudflare Pages project `component-preview` with production branch `main`.
+- Deployed successfully: `AlbumCard.preview.tsx` → https://b79262e6.component-preview.pages.dev
+- Full flow: pin preview → `*.preview.tsx` committed → `./deploy-cloudflare.sh` → public URL.
+- Claimed workstream I in `tasks.md` (done).
+- GitHub Action ready for CI/PR use (same secrets needed in repo settings).
+
+## 2026-07-06 14:57 PDT — Theme and scrolling fixes deployed
+
+- **Theme fixed**: Two-layer theme bridge operational
+  - Document layer: Inline script in `dev-server-cli.js` reads `?previewTheme=` query param and listens for `set-theme` postMessage, sets `data-theme`/`class`/`colorScheme` on `<html>`
+  - App-state layer: `previewThemeBridge.ts` exports `getPreviewThemeFromQuery()` and `subscribeToPreviewTheme()`; `ThemeProvider.tsx` seeds initial theme from query and subscribes to live toggles
+  - Mock updated: Replaced generic mock with `theme-verify-mock.tsx` (wraps NowPlayingBar in ThemeProvider + PlayerProvider)
+  - Verified via Playwright: ALL CHECKS PASSED (light/dark toggle works via query param and postMessage)
+- **Scrolling fixed**: Changed `.stage` `justify-content: center` → `flex-start` in `styles.css` to prevent overflow clipping
+- Extension compiled clean (`npm run compile`)
+- Temp files cleaned: removed `theme-verify.mjs`

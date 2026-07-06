@@ -24,6 +24,10 @@ Status values: `todo` | `in-progress` | `blocked` | `done`
 | C | Multi-preview server manager (kill port 3000 + 2s wait) | _unclaimed_ | todo | `src/server.ts`, `dev-server-cli.js` | D5c |
 | D | Mock caching / reuse | _unclaimed_ | todo | `src/preview.ts` (cache layer) | D5d — coordinate w/ A on `preview.ts` |
 | E | Golden-set fixtures + scoring harness | _partially started_ | in-progress | `vite-app/src/...` fixtures, `*.golden.ts` | See `golden-set.md`; started by another agent |
+| F | Pin-to-commit persistence (D12/Tier 0) | orchestrator | done | `src/types.ts` (append), `src/preview.ts` (pinPreview), `src/webviewProtocol.ts` (pin msg), `src/webview.ts` (handler), `src/extension.ts` (command), `package.json` | `*.preview.tsx` + `*.preview.json` provenance; compile clean |
+| G | Static build path (build-cli.js) | orchestrator | done | `vite-app/build-cli.js` | Sibling to dev-server-cli.js; vite build → static dist; tested on mock.tsx |
+| H | Local preview build script | orchestrator | done | `vite-app/build-previews.sh` | Finds all *.preview.tsx, builds each, serves via npx serve; tested end-to-end |
+| I | Cloudflare Pages deployment | orchestrator | done | `vite-app/.env`, `vite-app/deploy-cloudflare.sh`, Cloudflare project | API token + account ID; project created; deployed to https://b79262e6.component-preview.pages.dev |
 
 ## Open cross-cutting questions
 
