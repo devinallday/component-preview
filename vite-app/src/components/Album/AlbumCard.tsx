@@ -6,13 +6,35 @@ interface AlbumCardProps {
   album: Album;
   onAlbumSelect: (album: Album) => void;
   onTrackPlay: (track: Track) => void;
+  /** Color scheme to render in. Defaults to "dark" (the app's default surface). */
+  theme?: "light" | "dark";
 }
+
+// Per-theme class sets. Keeping them in one place makes it easy to see the
+// light/dark contrast and to add more themes later.
+const THEME_STYLES = {
+  dark: {
+    container: "bg-spotify-gray-900/50 hover:bg-spotify-gray-700",
+    title: "text-white",
+    artist: "text-spotify-gray-300",
+    year: "text-spotify-gray-400",
+  },
+  light: {
+    container: "bg-gray-100 hover:bg-gray-200",
+    title: "text-gray-900",
+    artist: "text-gray-600",
+    year: "text-gray-500",
+  },
+} as const;
 
 const AlbumCard: React.FC<AlbumCardProps> = ({
   album,
   onAlbumSelect,
   onTrackPlay,
+  theme = "dark",
 }) => {
+  const styles = THEME_STYLES[theme];
+
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (album.tracks.length > 0) {
@@ -22,7 +44,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
 
   return (
     <div
-      className="group cursor-pointer p-8 bg-spotify-gray-900/50 hover:bg-spotify-gray-700 rounded-lg transition-all duration-200"
+      className={`group cursor-pointer p-8 ${styles.container} rounded-lg transition-all duration-200`}
       onClick={() => onAlbumSelect(album)}
     >
       <div className="relative mb-4">
@@ -43,11 +65,13 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
         </button>
       </div>
       <div className="space-y-1">
-        <h3 className="text-white font-medium text-sm line-clamp-2 leading-tight">
+        <h3
+          className={`${styles.title} font-medium text-sm line-clamp-2 leading-tight`}
+        >
           {album.title}
         </h3>
-        <p className="text-spotify-gray-300 text-sm truncate">{album.artist}</p>
-        <p className="text-spotify-gray-400 text-xs">{album.year}</p>
+        <p className={`${styles.artist} text-sm truncate`}>{album.artist}</p>
+        <p className={`${styles.year} text-xs`}>{album.year}</p>
       </div>
     </div>
   );
