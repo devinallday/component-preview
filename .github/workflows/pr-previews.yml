@@ -19,9 +19,9 @@ jobs:
       - name: Get changed component files
         id: changed
         run: |
-          # Changed .tsx/.jsx files under src/components/ (excluding the *.preview.tsx themselves)
+          # Changed .tsx/.jsx files under src/components/ or src/preview/ (excluding the *.preview.tsx themselves)
           CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
-            | grep -E 'src/components/.*\.(tsx|jsx)$' \
+            | grep -E 'src/(components|preview)/.*\.(tsx|jsx)$' \
             | grep -v '\.preview\.' || true)
           echo "components<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED" >> $GITHUB_OUTPUT
@@ -77,7 +77,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: component-preview
           directory: vite-app/.component-preview/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR with preview URLs
         if: steps.build.outputs.built == 'true'
