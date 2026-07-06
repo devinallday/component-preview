@@ -11,11 +11,16 @@ extension, and (3) how to **persist and distribute mocks outside the editor** (a
 Cloudflare, etc.).
 
 It is deliberately mapped onto the **nine seams** already defined in `../seams.md` so
-recommendations plug into existing decisions (`../decisions.md` D1–D10) rather than proposing a
-rewrite.
+recommendations plug into existing decisions (`../decisions.md`) rather than proposing a rewrite.
+
+> **Start here:** `product-vision.md` is the canonical product doc (personas, the coherent surface,
+> build order, beliefs/non-goals). The other files are supporting research it draws on.
 
 ## Files
 
+- **`product-vision.md`** — **canonical.** User profiles, the one-artifact/one-loop/four-surfaces
+  model, the two input modes (direct-manipulation controls + agent), the L0→L4 topological build
+  map, and what we believe / don't believe. Read this first.
 - **`product-landscape.md`** — Storybook feature surface + Chromatic paid product. What the
   "manual, human-authored" incumbent does, and what changes when an agent (not a human) is the
   author of stories/mocks. The strategic wedge.
@@ -26,20 +31,16 @@ rewrite.
   artifacts, a shareable preview URL, and the Cloudflare (Workers/R2/Durable Objects) options for
   hosting ephemeral previews. Maps to seam #9 (Persistence/provenance).
 
-## TL;DR (the thesis)
+## TL;DR
 
-- **Storybook's moat is the `stories` file**; Chromatic's moat is **turning those stories into a
-  visual-regression eval in CI.** Both assume a *human* wrote the story. The agentic wedge is:
-  **the agent authors the story/mock, and an objective render+visual gate (our seam #6) is what
-  makes the agent trustworthy.** We already decided this (D4) — the industry validates it.
-- **Don't build a framework; assemble a thin agentic loop.** Reach for **Vercel AI SDK v5/6**
-  (`ToolLoopAgent` + structured output) around the existing Anthropic model, **Playwright** for the
-  render gate (D9, same engine Chromatic/Storybook test-runner use), **react-docgen-typescript**
-  for prop types, **MSW** for network isolation, and **zod + a faker bridge** for deterministic
-  fallback data.
-- **Persistence is the team unlock.** Move from one overwritten `mock.tsx` to **committed named
-  `*.preview.tsx` + provenance metadata** (seam #9), and offer a **shareable hosted preview** via
-  Cloudflare Workers + R2 for review outside the IDE.
+- **The wedge** (full argument in `product-vision.md`): both Storybook and Chromatic assume a
+  *human* authors the story; the agentic move is **the agent authors the Preview and an objective
+  render/verify gate (seam #6) makes it trustworthy.** Verification is the moat (D4).
+- **Assemble a thin loop, don't build a framework** (`libraries.md`): **Vercel AI SDK** around the
+  existing Anthropic model, **Playwright** gate (D9), **react-docgen-typescript** for prop types,
+  **MSW** for network isolation, **zod + faker** for deterministic data.
+- **Persistence is the team unlock** (`persistence-and-distribution.md`): **ephemeral by default,
+  pin-to-commit** named `*.preview.tsx` + provenance, then a Cloudflare-hosted shareable preview.
 
 ## How to read this against the existing plan
 

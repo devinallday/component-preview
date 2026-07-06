@@ -12,8 +12,8 @@ Status values: `todo` | `in-progress` | `blocked` | `done`
 | ID | Workstream | Owner | Status | Files (owned) | Notes |
 |---|---|---|---|---|---|
 | S0 | Refactor into owned modules + stable interfaces file | orchestrator | done | `src/context.ts`, `src/preview.ts`, new `src/server.ts`, new `src/types.ts` | Done; compiles clean |
-| S1 | Context collection: transitive relative-import walk + provider detection | orchestrator | in-progress | `src/context.ts` | D6; walk works; provider-file lookup bug (see progress handoff) |
-| S2 | Render-verification gate (Playwright harness) | orchestrator | todo | new `src/verify.ts`, extension `package.json` | D4/D9; scored vs golden set |
+| S1 | Context collection: transitive relative-import walk + provider detection | orchestrator | done | `src/context.ts` | D6; provider-file lookup fixed (workspace src scan); verified on Player |
+| S2 | Render-verification gate (Playwright harness) | orchestrator | done | new `src/verify.ts`, `src/types.ts` (append), extension `package.json` | D4/D9; `verifyRender(url,{assertions})`; smoke-tested pass+fail on Player |
 
 ## Phase 1 — Fan-out (parallel, after spine)
 

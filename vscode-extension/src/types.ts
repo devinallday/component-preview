@@ -46,3 +46,29 @@ export interface ComponentContext {
   /** Context providers the component needs to be wrapped in to render (S1). */
   requiredProviders?: RequiredProvider[];
 }
+
+/**
+ * A golden-set assertion for one target state: every `mustContain` substring must
+ * appear in the rendered page text for that state to pass. Fixtures declare these in
+ * a sibling `*.golden.ts`; the verification seam only consumes the parsed shape.
+ */
+export interface GoldenAssertion {
+  state: string;
+  mustContain?: string[];
+}
+
+export interface AssertionResult {
+  state: string;
+  passed: boolean;
+  detail: string;
+}
+
+/** Result of the render-verification gate: the objective signal that a mock is trustworthy. */
+export interface VerifyResult {
+  /** True iff no console/page errors, no error overlay, and `#root` rendered content. */
+  ok: boolean;
+  consoleErrors: string[];
+  pageErrors: string[];
+  renderedContent: boolean;
+  assertionResults?: AssertionResult[];
+}

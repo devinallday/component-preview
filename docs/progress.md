@@ -77,7 +77,8 @@ Fan-out (A–E) still blocked on spine. Don't edit `types.ts` without coordinati
 - Added an L0→L3 maturity ladder tying it together. Linked `seams.md` from `README.md`.
 - No code changed; still plan-only (D10).
 
-## 2026-07-06 (later 3) — product/library research report
+## 2026-07-06 13:10 PDT — product/library research report
+<!-- (was mislabeled "(later 3)", colliding with the Phase-0 handoff entry; renamed to timestamp) -->
 
 - Compiled `docs/report/` (README + 3 files) on "Storybook for the agentic era":
   - `product-landscape.md`: Storybook primitives + Chromatic paid product mapped to our 9 seams;
@@ -98,3 +99,69 @@ Fan-out (A–E) still blocked on spine. Don't edit `types.ts` without coordinati
 - "Subagents" here = 1 serial `code_search` (Fast Context) pass over `vscode-extension/src` +
   parallel `search_web` batches. True parallel dev-time fan-out (D3/D5) is a cross-session
   orchestration pattern, not a single-tool capability — noted so expectations stay grounded.
+
+## 2026-07-06 13:18 PDT — orchestration session start (new agent)
+
+- New orchestrator agent picked up the handoff. Read full spine (`types.ts`, `context.ts`,
+  `preview.ts`, `server.ts`) + Player dependency chain (`Player.tsx` → `usePlayerContext.ts`
+  → `PlayerContext.ts`; provider lives at `contexts/PlayerProvider.tsx`, NOT import-reachable).
+- Confirmed the S1 blocker root cause: `detectRequiredProviders` finds the name `PlayerProvider`
+  but `files.find(...)` only searches already-collected deps, which never include the provider.
+- Added `AGENTS.md` with a REQUIRED timestamped-logging convention for coherent review/presentation.
+- Plan: fan out fast subagents under orchestrator review. Kicking off (parallel, disjoint files):
+  **S1** provider-file lookup fix (`context.ts`) + **S2** Playwright render-verify gate
+  (`verify.ts`, extension `package.json`). Golden-set (E) to follow after spine review (D3).
+
+## 2026-07-06 13:27 PDT — Phase 0 spine COMPLETE (S1 + S2 landed via parallel subagents)
+
+Ran two fast subagents in parallel (disjoint files) under orchestrator review:
+
+- **S1 DONE** (subagent → `context.ts` only). Fixed the provider-lookup blocker: when a
+  detected provider name (e.g. `PlayerProvider`) isn't in the collected import graph, we now
+  lazily scan the nearest `src` tree (skips node_modules/.git/dist/out/build, capped 2000 files),
+  locate the exporting file via the existing export regex, and fold that provider file **plus its
+  transitive relative deps** into `dependencies` (deduped by abs path). Existing behavior preserved.
+  - Verified on `Player.tsx`: `requiredProviders` = `[{PlayerProvider, .../contexts/PlayerProvider.tsx}]`;
+    `dependencies` now includes `PlayerProvider.tsx` + `data/mockData.ts`. Compile + lint clean.
+  - Orchestrator reviewed the diff: lazy-scan (only when needed), dedup, and fallbacks are sound.
+
+- **S2 DONE** (subagent → new `verify.ts`, appended `types.ts`, extension `package.json`).
+  Playwright headless render gate (seam #6, D4/D9). `verifyRender(url, {assertions?})` captures
+  console errors, uncaught `pageerror`s, `vite-error-overlay`, error-text indicators, and whether
+  `#root` mounted content; optional golden-set assertion scoring (`{state, mustContain[]}`).
+  Decoupled from `server.ts` (takes only a URL). New stable interfaces `VerifyResult`,
+  `GoldenAssertion`, `AssertionResult` appended to `types.ts` (append-only, D8).
+  - E2E smoke (no LLM): correct mock `<PlayerProvider><Player/></PlayerProvider>` → `ok:true`;
+    broken mock `<Player/>` (no provider) → `ok:false`, provider guard captured. Temp files cleaned.
+  - Playwright installed as dev dep; `npx playwright install chromium` succeeded.
+  - **Gotcha (decision candidate):** extension `tsconfig.json` has `lib:["ES2022"]`, no DOM. Playwright
+    types + `page.evaluate` need DOM globals. Subagent contained it to a file-scoped
+    `/// <reference lib="dom" />` in `verify.ts` rather than editing shared tsconfig. Fine for now;
+    could instead add `"DOM"` to shared tsconfig `lib` if more browser-side code appears.
+
+- Orchestrator re-ran the COMBINED spine: `npm run compile` + `npm run lint` both **clean**.
+- **The full spine (context → generation → render-verify) is now in place.** Still untested with a
+  live LLM (no Anthropic key run yet) — generation prompt already injects deps + provider-wrapping.
+
+### Next
+- Fan-out is now unblocked (D3). Next: workstream **E** (golden-set fixtures + `*.golden.ts` using
+  the `{targetStates, assertions:[{state, mustContain[]}]}` contract that S2 consumes).
+- Later: wire `verifyRender` into the extension's generate→render flow (caller owns server lifecycle).
+
+## 2026-07-06 13:32 PDT — product vision written + docs consolidated
+
+- Wrote **`report/product-vision.md`** as the **canonical** product doc: the one-Preview-artifact
+  model, four personas (incl. ⭐ the coding agent as a user), two input modes (direct-manipulation
+  controls + agent), the **L0→L4 topological build map** + three commitments, and beliefs/non-goals.
+- Recorded product decisions **D11–D14** in `decisions.md`: (D11) keep Storybook-style controls +
+  variant gallery alongside the agent — chatbox is fallback; (D12) Previews ephemeral by default,
+  **pin-to-commit**; (D13) agent-native (MCP) + multiplayer as first-class surfaces (D2 still stands);
+  (D14) hosted previews on a domain isolated from any control plane.
+- **Consolidated to remove repetition:** `report/README.md` now points to product-vision as canonical
+  (trimmed duplicated thesis); `product-landscape.md` strategic-takeaways trimmed + "controls kept"
+  correction; `persistence-and-distribution.md` reconciled to pin-to-commit (D12/D14).
+- **Cleaned stale docs:** `architecture.md` refreshed to post-spine reality (module map, deep context,
+  `verify.ts`) with an accurate remaining-gaps list; `goals.md` success criteria checked off (S1/S2)
+  + added self-correcting loop & variant fan-out; `README.md` index now lists all docs + `report/`.
+- Fixed a duplicate `(later 3)` heading collision above (renamed the research entry to a timestamp).
+- No extension code changed — docs only.

@@ -75,3 +75,34 @@ only after the user confirms shared understanding.
 >
 > **2026-07-06 — CONFIRMED.** User confirmed D3–D9 as written and cleared Phase 0 to begin
 > (D10 satisfied). S0→S1→S2 in progress; see `tasks.md`.
+
+---
+
+## Session 2026-07-06 (later) — product-surface decisions
+
+_Full narrative + personas + build order in `report/product-vision.md`. These are the binding calls._
+
+### D11 — Two input modes: direct-manipulation controls **and** agent (not a chatbox alone)
+Keep **Storybook-style auto-generated controls** (from extracted prop types) + state/viewport/theme
+toggles + a **variant gallery** for the easy 90%. The **agent** owns authoring, provider-wiring,
+realistic data, structural/hard-to-reach states, and **variant fan-out**. NL intent is a *fallback*
+input for states you can't click to, not the primary surface. **Rule:** controls edit `args`; the
+agent edits structure; both write the same Preview. _(Revises the earlier "don't rebuild Storybook"
+stance — we keep its controls, not its authoring burden.)_
+
+### D12 — Previews are ephemeral by default; **pin-to-commit**
+Do not auto-commit generated mocks (repo rot + PR review noise). Keep the throwaway
+`.component-preview/mock.tsx` for one-offs; a human **pins** a Preview to promote it to a committed
+`*.preview.tsx` + provenance sidecar. Only pinned Previews enter the repo/PR/CI path. See
+`report/persistence-and-distribution.md`.
+
+### D13 — Agent-native (MCP) + multiplayer are first-class surfaces
+The heaviest future consumer is **another coding agent** needing to *see* whether its UI edit
+rendered correctly. Design the Preview + verify gate to be agent-callable (MCP) so it becomes the
+"eyes" of other agents, and treat the Preview as a **shared, multiplayer** artifact. Same loop, four
+surfaces (IDE / PR-CI / hosted link / agent). Still gated behind L1 trust; does **not** un-defer the
+runtime multi-agent *generation* pipeline (D2 stands).
+
+### D14 — Hosted previews live on a domain isolated from any control plane
+If/when we serve agent-authored mock HTML/JS at a URL, serve it from a separate registrable domain
+from the API/dashboard, so untrusted generated code can't touch session/cookies. Security invariant.

@@ -7,10 +7,14 @@ overwritten every run — `preview.ts:97-104`) → dev server → iframe. The mo
 component, the first is gone. This section is about the three escalating ways to make mocks
 **durable, shareable, and reviewable**, per the user's prompt ("artifacts? cloudflare?").
 
-## Tier 0 — Committed repo artifacts (the cheapest, highest-leverage step)
+## Tier 0 — Persistable repo artifacts, **ephemeral by default / pin-to-commit**
 
-**Move from one `mock.tsx` to named, committed `*.preview.tsx` + sidecar metadata**, colocated with
-the component (the Storybook/react-cosmos file-convention model).
+> **Revised stance (see `product-vision.md`):** do *not* auto-commit every generated mock — that
+> creates repo rot and PR review noise. Previews are **ephemeral by default**; a human **pins** the
+> ones worth keeping, and only pinned Previews become committed `*.preview.tsx` + metadata.
+
+**When pinned, move from one throwaway `mock.tsx` to a named `*.preview.tsx` + sidecar metadata**,
+colocated with the component (the Storybook/react-cosmos file-convention model).
 
 - **Shape:** `AlbumCard.preview.tsx` (default-export mock, the #4 artifact) + `AlbumCard.preview.json`
   (provenance: model, prompt hash, context files used, target state, timestamp, gate result).
@@ -19,8 +23,9 @@ the component (the Storybook/react-cosmos file-convention model).
   - Mocks show up in PR diffs → reviewable UI states become part of code review.
   - Provenance makes results **reproducible & debuggable** ("which model/prompt/context made this?").
   - The golden set becomes a committed, CI-runnable regression eval (mini-Chromatic, inward-facing).
-- **Cost:** near-zero — it's a naming + write-location change plus a metadata writer. This is the
-  single most valuable persistence step and should precede any hosting work.
+- **Cost:** near-zero — a naming + write-location change plus a metadata writer, gated behind an
+  explicit "pin" action. This is the single most valuable persistence step and should precede any
+  hosting work.
 - **Optional convention:** a repo-level `preview.config.ts` declaring global wrappers (theme,
   router, `PlayerProvider`) so every component renders consistently — encodes team knowledge once
   (Storybook decorators / react-cosmos decorators pattern).
@@ -71,8 +76,8 @@ a disposable dev convenience.
 
 ## Recommended sequencing
 
-1. **Tier 0 first** (committed `*.preview.tsx` + provenance). Cheap, unlocks review + reproducibility,
-   requires no external infra. Slots into the persistence gap called out in `../seams.md` §9.
+1. **Tier 0 first** (pin → committed `*.preview.tsx` + provenance). Cheap, unlocks review +
+   reproducibility, requires no external infra. Slots into the persistence gap in `../seams.md` §9.
 2. **Playwright gate storing results** into the sidecar metadata (S2 already builds the gate).
 3. **Tier 1 Option A** (R2 + Worker static host) when someone needs to share a preview outside the
    editor. Start static; add Dynamic Workers only if live edge behavior is required.
@@ -80,10 +85,10 @@ a disposable dev convenience.
 
 ## Decision hooks for `../decisions.md`
 
-- New decision candidate: **"Mocks are committed named artifacts with provenance, not an
-  overwritten temp file."** (Supersedes the implicit `.component-preview/mock.tsx` behavior for the
-  team path; keep the temp file for one-off/ephemeral previews.)
-- New decision candidate: **"Hosted previews (if built) live on a domain isolated from any control
+- Recorded as **D12**: **"Previews are ephemeral by default; pinning promotes one to a committed
+  named artifact with provenance."** (Keeps the `.component-preview/` temp file for one-off
+  previews; only pinned Previews enter the repo/PR/CI path.)
+- Recorded as **D14**: **"Hosted previews (if built) live on a domain isolated from any control
   plane."** (Security invariant for serving agent-authored code.)
 
 ## Sources

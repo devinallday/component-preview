@@ -57,17 +57,19 @@ Storybook/Chromatic assume a **human writes the story**. Every feature is a huma
    why D4's render gate is the correct primary investment, not the webview polish.
 
 2. **The feedback loop replaces the controls panel.** Storybook's value-add UI (Controls,
-   Interactions panel) exists so a *human* can nudge a story toward a target state. An agent
-   nudges via **natural-language intent → generate → render → read errors → refine** (seam #8, our
-   D5a). The "controls" become an *intent channel*, and the interaction script (`play`) becomes
-   something the **agent authors and the gate verifies**, not something a human hand-writes.
+   Interactions panel) exists so a *human* can nudge a story toward a target state. In our model
+   (see `product-vision.md`) we **keep direct-manipulation controls** for the easy 90% *and* add an
+   agent for the hard cases: the agent authors + fans out variants and reaches states you can't
+   click to via **NL intent → generate → render → verify → refine** (seam #8, D5a). Controls edit
+   `args`; the agent edits structure. The `play` script becomes something the **agent authors and
+   the gate verifies**, not something a human hand-writes.
 
 ### Concrete feature translations (Storybook/Chromatic → agentic)
 
 | Their feature (human-authored) | Agentic-era version (agent-authored, gate-verified) |
 |---|---|
 | Write a `Story` per state | Agent enumerates target states from types+usage; emits a mock per state |
-| Controls panel to tweak args | NL intent ("show empty-playlist error") drives regeneration (#8) |
+| Controls panel to tweak args | **Kept** — auto-generated controls from types; NL intent handles states controls can't reach (#8) |
 | Decorators for providers | **Auto-detected** provider graph, agent wraps the mock (D6) |
 | `play` function hand-written | Agent proposes interactions to force hidden states (tooltip open); gate runs them |
 | Autodocs from types | Type extraction is *input to generation*, not just docs (#2) |
@@ -77,15 +79,14 @@ Storybook/Chromatic assume a **human writes the story**. Every feature is a huma
 
 ## 4. Strategic takeaways for our build
 
-- **We are not competing with Storybook's workshop; we are removing the authoring step.** Position
-  the tool as "hit Preview, get a verified isolated render — no story to write."
-- **Invest disproportionately in the verification seam (#6).** It is both Chromatic's moat and the
-  thing that makes an agent author trustworthy. Everything else (webview polish, controls) is
-  secondary and is exactly where the incumbents already win on human ergonomics.
-- **Steal the mechanisms, not the UI.** Decorators→provider detection, argTypes→type extraction,
-  test-runner→our Playwright gate (D9), stories-as-tests→golden set. These are validated designs.
-- **Persistence is the team wedge (L3).** Chromatic proves people pay to make ephemeral previews
-  into shared, reviewable, durable records. See `persistence-and-distribution.md`.
+These distilled into the product beliefs in `product-vision.md`; the research-specific points:
+
+- **Remove the *authoring* step, keep the *controls*.** "Hit Preview, get a verified isolated
+  render — no story to write," but still expose Storybook-style direct manipulation for tweaking.
+- **Steal the mechanisms, not the workshop UI.** Decorators→provider detection, argTypes→type
+  extraction, test-runner→our Playwright gate (D9), stories-as-tests→golden set. Validated designs.
+- **Verification (#6) is where correctness is won** — Chromatic's moat and what makes an agent
+  author trustworthy. Persistence (#9) is the team wedge (see `persistence-and-distribution.md`).
 
 ## Sources
 

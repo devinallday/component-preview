@@ -7,11 +7,15 @@ or human picking up this project should read these docs first.
 
 ## Files
 
-- **`goals.md`** — What we are building and why. The north star + success criteria.
+- **`goals.md`** — The north star + success criteria (concise). Fuller product surface → `report/`.
 - **`seams.md`** — The system's architectural seams, which four are load-bearing for a high-quality baseline, and the path from baseline → agentic → team-useful.
-- **`progress.md`** — Running log of what has been done, what's in flight, and what's next. Update this every session.
-- **`decisions.md`** — Design decisions (ADR-style) made during grilling/planning sessions, with rationale.
-- **`architecture.md`** — Snapshot of how the current system works and where the gaps are.
+- **`decisions.md`** — Design decisions (ADR-style), with rationale. D1–D10 (build plan) + D11–D14 (product surface).
+- **`architecture.md`** — Snapshot of how the current system works (post-spine) and the remaining gaps.
+- **`tasks.md`** — Task board: workstream ownership + status. Claim here before editing code.
+- **`golden-set.md`** — Fixture/eval spec backing the verification seam.
+- **`progress.md`** — Append-only, timestamped running log. Update every session.
+- **`report/`** — Product & library research. **Start at `report/product-vision.md`** (canonical
+  product doc); then `product-landscape.md`, `libraries.md`, `persistence-and-distribution.md`.
 
 ## Conventions
 

@@ -22,6 +22,16 @@ const MAX_FILES = 25;
 
 const RESOLVE_EXTENSIONS = [".tsx", ".ts", ".jsx", ".js"];
 
+const SCAN_SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "out",
+  "build",
+  ".component-preview",
+]);
+const MAX_SCAN_FILES = 2000;
+
 /**
  * Resolve a relative import specifier from an importer file to an absolute path
  * on disk, trying common TS/JS extensions and index files. Returns null if no
@@ -130,15 +140,92 @@ function collectDependencies(entryFile: string): CollectedFile[] {
   return Array.from(collected.values());
 }
 
+/** Nearest ancestor `src` dir, else nearest dir with a `package.json`, else the file's own dir. */
+function findSearchRoot(entryFile: string): string {
+  const entryDir = path.dirname(entryFile);
+
+  for (let dir = entryDir; ; ) {
+    if (path.basename(dir) === "src") {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  for (let dir = entryDir; ; ) {
+    if (fs.existsSync(path.join(dir, "package.json"))) {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  return entryDir;
+}
+
 /**
- * Detect required context providers by scanning collected files for the
- * conventional guard message thrown by context hooks:
- *   "<hook> must be used within a <Provider>"
- * then locating which collected file exports that provider.
+ * Scan the workspace source tree (bounded, skipping vendored/build dirs) to locate a
+ * provider the component depends on via a hook/context but never imports directly.
+ */
+function scanWorkspaceSourceFiles(entryFile: string): CollectedFile[] {
+  const root = findSearchRoot(entryFile);
+  const results: CollectedFile[] = [];
+  const stack: string[] = [root];
+
+  while (stack.length > 0 && results.length < MAX_SCAN_FILES) {
+    const dir = stack.pop()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (results.length >= MAX_SCAN_FILES) {
+        break;
+      }
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (SCAN_SKIP_DIRS.has(entry.name)) {
+          continue;
+        }
+        stack.push(full);
+      } else if (
+        entry.isFile() &&
+        RESOLVE_EXTENSIONS.includes(path.extname(entry.name))
+      ) {
+        let content: string;
+        try {
+          content = fs.readFileSync(full, "utf-8");
+        } catch {
+          continue;
+        }
+        results.push({ filePath: full, content });
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Detect required context providers via the conventional guard thrown by context
+ * hooks ("<hook> must be used within a <Provider>"), then find the provider's file.
+ * The provider is often not in the collected deps (the component imports the
+ * hook/context, not the provider), so unresolved names are looked up by scanning the
+ * workspace; the found file + its deps are returned in `extraDependencies`.
  */
 function detectRequiredProviders(
   files: CollectedFile[],
-): RequiredProvider[] {
+  entryFile: string,
+): { providers: RequiredProvider[]; extraDependencies: CollectedFile[] } {
   const guardRegex =
     /must be used within (?:a |an |the )?<?([A-Z][A-Za-z0-9_]*)>?/g;
 
@@ -152,16 +239,38 @@ function detectRequiredProviders(
   }
 
   const providers: RequiredProvider[] = [];
+  const extraDependencies: CollectedFile[] = [];
+  const seenPaths = new Set<string>(files.map((f) => f.filePath));
+
+  // Scan the workspace at most once, and only if a provider is missing from the deps.
+  let workspaceFiles: CollectedFile[] | null = null;
+  const getWorkspaceFiles = (): CollectedFile[] => {
+    if (workspaceFiles === null) {
+      workspaceFiles = scanWorkspaceSourceFiles(entryFile);
+    }
+    return workspaceFiles;
+  };
+
   for (const name of providerNames) {
     const exportRegex = new RegExp(
       `export\\s+(?:default\\s+)?(?:const|function|class|let)?\\s*${name}\\b|export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`,
     );
-    const owner = files.find((f) => exportRegex.test(f.content));
-    if (owner) {
-      providers.push({ providerName: name, filePath: owner.filePath });
+    const owner =
+      files.find((f) => exportRegex.test(f.content)) ??
+      getWorkspaceFiles().find((f) => exportRegex.test(f.content));
+    if (!owner) {
+      continue;
+    }
+
+    providers.push({ providerName: name, filePath: owner.filePath });
+    for (const dep of [owner, ...collectDependencies(owner.filePath)]) {
+      if (!seenPaths.has(dep.filePath)) {
+        seenPaths.add(dep.filePath);
+        extraDependencies.push(dep);
+      }
     }
   }
-  return providers;
+  return { providers, extraDependencies };
 }
 
 export async function collectContext(
@@ -170,7 +279,16 @@ export async function collectContext(
 ): Promise<ComponentContext> {
   const fileContent = fs.readFileSync(filePath, "utf-8");
   const dependencies = collectDependencies(filePath);
-  const requiredProviders = detectRequiredProviders(dependencies);
+  const { providers: requiredProviders, extraDependencies } =
+    detectRequiredProviders(dependencies, filePath);
+
+  const seenPaths = new Set<string>(dependencies.map((d) => d.filePath));
+  for (const dep of extraDependencies) {
+    if (!seenPaths.has(dep.filePath)) {
+      seenPaths.add(dep.filePath);
+      dependencies.push(dep);
+    }
+  }
 
   return {
     filePath,
