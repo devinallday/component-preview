@@ -2,6 +2,7 @@ import AlbumCard from "./AlbumCard";
 import type { Album } from "../../types";
 
 // Preview with 6 albums × 2 themes to demonstrate scrolling and the new toolbar.
+// Also demonstrates the featured badge (first album in each theme is featured).
 const albums: Album[] = [
   {
     id: "1",
@@ -97,11 +98,12 @@ export default function Mock() {
                 gap: 16,
               }}
             >
-              {albums.map((album) => (
+              {albums.map((album, index) => (
                 <AlbumCard
                   key={album.id}
                   album={album}
                   theme={theme}
+                  featured={index === 0}
                   onAlbumSelect={() => {}}
                   onTrackPlay={() => {}}
                 />
