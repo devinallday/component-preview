@@ -127,6 +127,10 @@ export default function PreviewToolbar({ children }: PreviewToolbarProps) {
           style={{
             maxWidth: size === "100%" ? "100%" : size,
             margin: "0 auto",
+            border: size === "100%" ? "none" : `2px solid ${theme === "dark" ? "#444" : "#ddd"}`,
+            borderRadius: size === "100%" ? "0" : "8px",
+            boxShadow: size === "100%" ? "none" : theme === "dark" ? "0 4px 20px rgba(0,0,0,0.5)" : "0 4px 20px rgba(0,0,0,0.1)",
+            overflow: "hidden",
           }}
         >
           {children}
