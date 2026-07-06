@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply w-full h-full m-0 p-0;
+  }
+
+  body {
+    @apply font-spotify bg-black text-white overflow-hidden min-w-80 min-h-screen;
+  }
+
+  #root {
+    @apply w-full h-screen;
+  }
+
+  button {
+    @apply rounded-lg border border-transparent px-5 py-2 text-base font-medium font-spotify bg-spotify-gray-800 cursor-pointer transition-colors duration-200;
+  }
+
+  button:hover {
+    @apply border-blue-500;
+  }
+
+  button:focus,
+  button:focus-visible {
+    @apply outline-4 outline-blue-500;
+  }
+}
